@@ -1,0 +1,204 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>uprak jaya</title>
+    <script src="https://cdn.jsdelivr.net/npm/vue@2/dist/vue.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free/js/all.js"></script>
+    <style>
+        /* Add some basic styles */
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        .form-group, .total-section, .payment-section {
+            margin-bottom: 15px;
+        }
+        .table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+        }
+        .table th, .table td {
+            border: 1px solid #ddd;
+            padding: 8px;
+        }
+        .delete-button {
+            background-color: red;
+            color: white;
+            border: none;
+            padding: 5px 10px;
+            cursor: pointer;
+        }
+        .selesai-button {
+            background-color: green;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            cursor: pointer;
+        }
+    </style>
+</head>
+<body>
+    <div id="app">
+        <div class="container">
+            <div class="header">
+                <div class="shop-name">
+                    <h1>Harvest Moon</h1>
+                </div>
+                <div class="logo">
+                    <img src="media/logo toko.jpg" alt="Description" width="200" height="120">
+                </div>
+            </div>
+            <div class="form-section">
+                <div class="form-group">
+                    <label for="no-nota">No. Nota :</label>
+                    <input type="text" id="no-nota" v-model="notaNumber">
+                </div>
+                <div class="form-group">
+                    <label for="pelanggan">Pelanggan :</label>
+                    <input type="text" id="pelanggan" v-model="customerName">
+                </div>
+                <div class="form-group">
+                    <label for="tanggal">Tanggal :</label>
+                    <input type="date" id="tanggal" v-model="date">
+                    <font-awesome-icon icon="calendar-alt" class="calendar-icon"/>
+                </div>
+            </div>
+            <div class="form-section">
+                <div class="form-group">
+                    <label for="kode-barang">Kode Barang :</label>
+                    <select id="kode-barang" v-model="selectedItemId">
+                        <option v-for="item in items" :value="item.id" :key="item.id">
+                            {{ item.id }}
+                        </option>
+                    </select>
+                    <font-awesome-icon icon="chevron-down" class="dropdown-icon"/>
+                </div>
+                <div class="form-group">
+                    <label for="nama-barang">Nama Barang :</label>
+                    <input type="text" id="nama-barang" v-model="selectedItemName" readonly>
+                </div>
+                <div class="form-group">
+                    <label for="quantity">Quantity :</label>
+                    <input type="number" id="quantity" v-model.number="quantity">
+                </div>
+            </div>
+            <table class="table">
+                <thead>
+                <tr>
+                    <th>ID Barang</th>
+                    <th>Nama Barang</th>
+                    <th>Harga Satuan</th>
+                    <th>Qty</th>
+                    <th>Jumlah</th>
+                    <th>Opsi</th>
+                </tr>
+                </thead>
+                <tbody>
+                <tr v-for="(item, index) in cartItems" :key="index">
+                    <td>{{ item.id }}</td>
+                    <td>{{ item.name }}</td>
+                    <td>{{ item.price | formatCurrency }}</td>
+                    <td>{{ item.quantity }}</td>
+                    <td>{{ item.totalPrice | formatCurrency }}</td>
+                    <td>
+                        <button @click="removeItem(index)" class="delete-button">
+                            Hapus
+                        </button>
+                    </td>
+                </tr>
+                </tbody>
+            </table>
+            <div class="total-section">
+                <div class="subtotal">
+                    <span>Sub Total: </span>
+                    <span>Rp.<input type="number" v-model="total-section" min="0" max="100"></span>
+                </div>
+                <div class="discount">
+                    <span>Diskon:</span>
+                    <span>= Rp.<input type="number" v-model="discountPercentage" min="0" max="100"> </span>
+                    <span>%</span>
+                    <span>= Rp.<input type="number" v-model="discountPercentage" min="0" max="100"> </span>
+                </div>
+                <div class="total-harga">
+                    <span>Total Harga: </span>
+                    
+                    <span>Rp.<input type="number" v-model="total-harga" min="0" max="100"></span>
+                </div>
+            </div>
+            <div class="payment-section">
+                <div class="bayar">
+                    <span>Bayar: </span>
+                    <span>Rp.<input type="number" v-model="paymentAmount"></span>
+                </div>
+                <div class="kembalian">
+                    <span>Kembalian: </span>
+                    <span>Rp.<input type="number" v-model="kembalian" min="0" max="100"></span>
+                </div>
+                <button class="selesai-button" @click="completeTransaction">
+                    Selesai
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        Vue.component('font-awesome-icon', {
+            props: ['icon'],
+            template: '<i :class="fas fa-${icon}"></i>'
+        });
+
+        new Vue({
+            el: '#app',
+            data: {
+                shopName: 'My Shop',
+                logoUrl: 'path_to_logo.png',
+                notaNumber: '',
+                customerName: '',
+                date: '',
+                items: [
+                    { id: 'item1', name: 'Item 1', price: 10000 },
+                    { id: 'item2', name: 'Item 2', price: 20000 }
+                ],
+                selectedItemId: null,
+                selectedItemName: '',
+                quantity: 1,
+                cartItems: [],
+                discountPercentage: 0,
+                paymentAmount: 0
+            },
+            computed: {
+                subTotal() {
+                    return this.cartItems.reduce((sum, item) => sum + item.totalPrice, 0);
+                },
+                discountAmount() {
+                    return (this.subTotal * this.discountPercentage) / 100;
+                },
+                totalHarga() {
+                    return this.subTotal - this.discountAmount;
+                },
+                changeAmount() {
+                    return this.paymentAmount - this.totalHarga;
+                }
+            },
+            watch: {
+                selectedItemId(newId) {
+                    const selectedItem = this.items.find(item => item.id === newId);
+                    this.selectedItemName = selectedItem ? selectedItem.name : '';
+                }
+            },
+            methods: {
+                removeItem(index) {
+                    this.cartItems.splice(index, 1);
+                },
+                completeTransaction() {
+                    alert('Transaction Complete!');
+                }
+            },
+            filters: {
+                formatCurrency(value) {
+                    return new Intl.NumberFormat
+                }}})
